@@ -16,3 +16,6 @@
 [submodule "src/roselito_navigation"]
 	path = src/roselito_navigation
 	url = git@github.com:ros2amr/roselito_navigation.git
+[submodule "src/roselito_agent_interface"]
+	path = src/roselito_agent_interface
+	url = git@github.com:gabryelfbatista/roselito_agent_interface.git
