@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  Copyright (C) 2025 Helio Perroni Filho (xperroni@gmail.com)
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+
+<!--
+  Launch the route recording node.
+
+  Author: Helio Perroni Filho
+-->
+
+<launch>
+  <arg name="use_sim_time" default="false"/>
+  <arg name="global_frame" default="map"/>
+  <arg name="robot_base_frame" default="base_footprint"/>
+  <arg name="path" default="$(env PWD)/route.pon"/>
+  <arg name="dist_threshold" default="0.5" />
+  <node name="replay_route" pkg="roselito_agent" exec="replay_route">
+    <param name="use_sim_time" value="$(var use_sim_time)"/>
+    <param name="global_frame" value="$(var global_frame)"/>
+    <param name="robot_base_frame" value="$(var robot_base_frame)"/>
+    <param name="save_path" value="$(var path)"/>
+    <param name="dist_threshold" value="$(var dist_threshold)"/>
+  </node>
+</launch>

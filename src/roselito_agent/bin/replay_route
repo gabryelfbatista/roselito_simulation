@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+r'''Replay route waypoints from a file.
+'''
+
+import rclpy
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile
+
+import builtin_interfaces.msg
+import geometry_msgs.msg
+import nav_msgs.msg
+import std_msgs.msg
+
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+
+from copy import deepcopy
+from sys import exit
+
+# Importando a função comum do seu pacote roselito_agent
+from roselito_agent.get_robot_pose import get_robot_pose
+
+class ReplayRoute(rclpy.node.Node):
+    r'''Replay a route file.
+    '''
+    def __init__(self):
+        r'''Create a new route replayer node.
+        '''
+        super().__init__('replay_route')
+        
+        # Parâmetros
+        self.declare_parameter('frequency', 10.0)
+        self.declare_parameter('global_frame', 'map')
+        self.declare_parameter('robot_base_frame', 'base_footprint')
+        self.declare_parameter('save_path', 'route.pon')
+        self.declare_parameter('dist_threshold', 0.5) # Distância para considerar que chegou no waypoint
+
+        self.__global_frame = self.get_parameter('global_frame').value
+        self.__robot_frame = self.get_parameter('robot_base_frame').value
+
+        self.__dist_threshold = self.get_parameter('dist_threshold').value
+        path_file = self.get_parameter('save_path').value
+
+        self.get_logger().info(f"Threshold de distância: {self.__dist_threshold}m")
+
+        self.__buffer = Buffer()
+        self.__listener = TransformListener(self.__buffer, self)
+        try:
+            with open(path_file, 'r') as f:
+                self.__route = eval(''.join(line.strip() for line in f))
+            self.get_logger().info(f'Rota carregada com {len(self.__route.poses)} waypoints.')
+        except Exception as e:
+            self.get_logger().error(f'Falha ao ler arquivo de rota: {e}')
+            exit()
+
+        # Atributos de controle de estado
+        self.__current_index = 0
+        self.__total_poses = len(self.__route.poses)
+
+        self.__pub_goal = self.create_publisher(geometry_msgs.msg.PoseStamped, '/goal_pose', 1)
+
+        period = 1.0 / self.get_parameter('frequency').value
+        self.__timer = self.create_timer(period, self.__callback)
+
+    def __callback(self):
+        r'''Timer callback.
+        '''
+        # Verifica se a rota terminou
+        if self.__current_index >= self.__total_poses:
+            self.get_logger().info('Fim da rota atingido! Encerrando nó...')
+            self.__timer.cancel()
+            self.destroy_node()
+            exit()
+
+        # Seleciona o próximo pose na rota
+        target_pose = deepcopy(self.__route.poses[self.__current_index])
+        target_pose.header.stamp = self.get_clock().now().to_msg()
+        target_pose.header.frame_id = self.__global_frame
+
+        # Publica o objetivo para a pilha de navegação
+        self.__pub_goal.publish(target_pose)
+
+        # Verifica a posição atual do robô usando a função comum de utilidades
+        current_pose = get_robot_pose(
+            self, 
+            self.__buffer, 
+            self.__global_frame, 
+            self.__robot_frame
+        )
+
+        if current_pose:
+            # Calcula a distância euclidiana (2D) entre o robô e o waypoint atual
+            dx = target_pose.pose.position.x - current_pose.pose.position.x
+            dy = target_pose.pose.position.y - current_pose.pose.position.y
+            
+            distance = (dx**2 + dy**2)**0.5
+
+            # Quando o robô está perto o suficiente, avança para o próximo waypoint
+            if distance < self.__dist_threshold:
+                self.get_logger().info(f'Waypoint {self.__current_index} atingido! Distância: {distance:.2f}m')
+                self.__current_index += 1
+
+def main():
+    r'''Start the node.
+    '''
+    rclpy.init()
+    node = ReplayRoute()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
