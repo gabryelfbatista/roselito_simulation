@@ -10,7 +10,7 @@ Make sure to have both `git` and the `git-lfs` plugin installed before cloning t
 
 The source tree includes all packages composing the software stack as [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules). Use the command below to clone the submodules alongside the parent project:
 
-    git clone --recurse-submodules git@github.com:ros2amr/roselito_simulation.git
+    git clone --recurse-submodules git@github.com:gabryelfbatista/roselito_simulation.git
 
 When pulling changes from the repository, remember to add the `--recurse-submodules` option to also pull changes to individual packages:
 
@@ -49,6 +49,14 @@ In any case, after he workspace is built it has to be sourced so that packages a
 To start the simulated environment, enter:
 
     ros2 launch roselito_gazebo start.launch
+
+Then in another terminal, run this to save the map:
+
+    ros2 launch roselito_navigation save_map.launch path:='absolute/path/to/map'
+
+To start the simulated enviroment with a map, enter:
+
+    ros2 launch roselito_gazebo start.launch map:='absolute/path/to/map'
 
 The command above will start Gazebo, load a world and place a robot inside it. To control the robot with the help of RQT, open a new GNU screen window and enter:
 
