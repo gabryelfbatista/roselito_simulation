@@ -1,6 +1,3 @@
-[submodule "src/roselito_agent"]
-	path = src/roselito_agent
-	url = git@github.com:gabryelfbatista/roselito_agent.git
 [submodule "src/ros_commons"]
 	path = src/ros_commons
 	url = git@github.com:ros2amr/ros_commons.git
