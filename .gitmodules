@@ -16,3 +16,6 @@
 [submodule "src/roselito_agent_interface"]
 	path = src/roselito_agent_interface
 	url = git@github.com:gabryelfbatista/roselito_agent_interface.git
+[submodule "src/roselito_agent"]
+	path = src/roselito_agent
+	url = git@github.com:gabryelfbatista/roselito_agent.git
